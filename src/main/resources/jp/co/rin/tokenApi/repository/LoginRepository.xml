@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="jp.co.rin.tokenApi.repository.LoginRepository">
+
+    <resultMap id="UserEntryResultMap" type="jp.co.rin.tokenApi.object.dto.UserEntry">
+        <id property="userId" column="user_id" />
+        <result property="password" column="password" />
+        <collection property="roles" ofType="java.lang.String">
+            <result column="role_name"/>
+        </collection>
+    </resultMap>
+
+	<select id="searchUser"
+	        resultMap="UserEntryResultMap">
+		SELECT
+		    uk.user_id,
+		    uk.password,
+		    rt.role_name
+		FROM
+		    USER_KANRI uk
+		LEFT JOIN ROLE_KANRI rk
+		    ON uk.user_id = rk.user_id
+		LEFT JOIN ROLE_TEIGI rt
+		    ON rk.role_id = rt.role_id
+		where uk.user_id=#{userId}
+	</select>
+</mapper>
+
+<!--
+■ resultMap 役割
+<id> : UserEntry の id とDB上の user_id を対応付け ＆ id を主キー要素としで検索結果をまとめる
+　　　　　　（select 結果で　user_id　が同じレコードは同一レコードと判断するという挙動）
+<result> : UserEntry の password とDB上の password を紐づけ
+<collection> : UserEntry の roles とDB上の role_name を紐づけ ＆ 格納型を String でコレクション
+　　　　　　（List<String> に追加していく）
+
+■ テーブル構造
+[USER_KANRI] : user_id と、そのユーザに対応するハッシュパスワードを管理
+[ROLE_KANRI] : user_id と、そのユーザに対応するロールの割り当てを管理（中間）
+[ROLE_TEIGI] : 割り当てIDと、それに対応するロールの名前 (role_name) を定義
+ ↓ select 時の結合
+[USER_KANRI] - join - [ROLE_KANRI] - join - [ROLE_TEIGI]
+
+ -->
